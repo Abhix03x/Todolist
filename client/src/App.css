@@ -1,0 +1,144 @@
+/* Global Styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #bc80da;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Navbar */
+nav {
+  width: 100%;
+  padding: 15px;
+  background: #222;
+  color: white;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* Center container for pages */
+.container {
+  margin-top: 80px; /* for navbar spacing */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card Styling */
+.card {
+  background: rgba(67, 19, 102, 0.453);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0);
+  width: 350px;
+  text-align: center;
+}
+
+/* Input fields */
+input, select {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+}
+
+/* Buttons */
+button {
+  padding: 10px 15px;
+  margin: 5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* Primary button */
+button:first-of-type {
+  background: #4CAF50;
+  color: white;
+}
+
+/* Danger button */
+button:last-of-type {
+  background: #f44336;
+  color: white;
+}
+
+/* Todos Card */
+.todos-card {
+  background: rgba(67, 19, 102, 0.453);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 500px;
+  text-align: left;
+}
+
+.todos-card h2 {
+  text-align: center;
+}
+
+.todos-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.todos-card li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #45076277;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.todos-card input[type="text"] {
+  background: #323232;
+  color: white;
+  border: none;
+}
+
+.todos-card input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+  .card,
+  .todos-card {
+    max-width: 90%;
+  }
+
+  nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav button {
+    margin-top: 10px;
+    width: 100%;
+  }
+}
