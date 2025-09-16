@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const sequelize = new Sequelize( "Todo","postgres", "Abhinand@123", {
+const sequelize = new Sequelize( "Todo","postgres", "*******", {
   host: "localhost",
   dialect: "postgres",
 });
