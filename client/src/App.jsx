@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./App.css";
 
-
+// Auth Component
 function Auth({ setToken }) {
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
@@ -17,6 +17,7 @@ function Auth({ setToken }) {
         password: form.password,
       });
       setToken(res.data.token);
+      localStorage.setItem("userId", res.data.userId);
       navigate("/todos");
     } else {
       await axios.post("http://localhost:5000/api/auth/signup", form);
@@ -28,8 +29,7 @@ function Auth({ setToken }) {
   return (
     <div className="container">
       <form className="card" onSubmit={handleSubmit}>
-        <h2 className="log">{isLogin ? "Login" : "Signup"}</h2>
-
+        <h2>{isLogin ? "Login" : "Signup"}</h2>
         {!isLogin && (
           <input
             placeholder="Username"
@@ -46,8 +46,7 @@ function Auth({ setToken }) {
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
         <button>{isLogin ? "Login" : "Signup"}</button>
-
-        <p style={{ marginTop: "10px" }}>
+        <p>
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <span
             style={{ color: "blue", cursor: "pointer" }}
@@ -61,30 +60,36 @@ function Auth({ setToken }) {
   );
 }
 
-function Todos({ token, logout }) {
+// Todos Component
+function Todos({ token }) {
   const [todos, setTodos] = useState([]);
-  const [form, setForm] = useState({ title: "", description: "" });
-  const [editingTodo, setEditingTodo] = useState(null);
-  const [editForm, setEditForm] = useState({
-    title: "",
-    description: "",
-    status: "pending",
-  });
+  const [users, setUsers] = useState([]);
+  const [form, setForm] = useState({ title: "", description: "", assignedTo: "" });
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
+    loadTodos();
+    axios
+      .get("http://localhost:5000/api/auth/users", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setUsers(res.data));
+  }, [token]);
+
+  const loadTodos = () => {
     axios
       .get("http://localhost:5000/api/todos", {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setTodos(res.data));
-  }, [token]);
+  };
 
   const addTodo = async () => {
     const res = await axios.post("http://localhost:5000/api/todos", form, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setTodos([...todos, res.data]);
-    setForm({ title: "", description: "" });
+    setForm({ title: "", description: "", assignedTo: "" });
   };
 
   const deleteTodo = async (id) => {
@@ -94,39 +99,27 @@ function Todos({ token, logout }) {
     setTodos(todos.filter((t) => t.id !== id));
   };
 
-  const startEdit = (todo) => {
-    setEditingTodo(todo.id);
-    setEditForm({
-      title: todo.title,
-      description: todo.description,
-      status: todo.status,
+  const updateTodo = async (id, updates) => {
+    const res = await axios.put(`http://localhost:5000/api/todos/${id}`, updates, {
+      headers: { Authorization: `Bearer ${token}` },
     });
+    setTodos(todos.map((t) => (t.id === id ? res.data : t)));
   };
 
-  const saveEdit = async () => {
-    const res = await axios.put(
-      `http://localhost:5000/api/todos/${editingTodo}`,
-      editForm,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTodos(todos.map((t) => (t.id === editingTodo ? res.data : t)));
-    setEditingTodo(null);
-  };
-
-  const toggleStatus = async (todo) => {
+  const toggleStatus = (todo) => {
     const newStatus = todo.status === "pending" ? "completed" : "pending";
-    const res = await axios.put(
-      `http://localhost:5000/api/todos/${todo.id}`,
-      { ...todo, status: newStatus },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setTodos(todos.map((t) => (t.id === todo.id ? res.data : t)));
+    updateTodo(todo.id, { status: newStatus });
   };
+
+  const myTasks = todos.filter((t) => t.creatorId == userId && t.assignedTo == userId);
+  const assignedTasks = todos.filter(
+    (t) => t.creatorId == userId || t.assignedTo == userId
+  ).filter((t) => !(t.creatorId == userId && t.assignedTo == userId));
 
   return (
     <div className="container">
       <div className="todos-card">
-        <h2>Todo-List</h2>
+        <h2>Create Task</h2>
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -137,53 +130,83 @@ function Todos({ token, logout }) {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           placeholder="Description"
         />
+        <select
+          value={form.assignedTo}
+          onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}
+        >
+          <option value="">Assign to yourself</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.username}
+            </option>
+          ))}
+        </select>
         <button onClick={addTodo}>Add</button>
 
+        {/* My Tasks */}
+        <h2>My Tasks</h2>
         <ul>
-          {todos.map((t) => (
+          {myTasks.map((t) => (
             <li key={t.id}>
-              {editingTodo === t.id ? (
-                <>
-                  <input
-                    value={editForm.title}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, title: e.target.value })
-                    }
-                  />
-                  <input
-                    value={editForm.description}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, description: e.target.value })
-                    }
-                  />
-                  <select
-                    value={editForm.status}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, status: e.target.value })
-                    }
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                  <button onClick={saveEdit}>Save</button>
-                  <button onClick={() => setEditingTodo(null)}>Cancel</button>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <input
-                      type="checkbox"
-                      checked={t.status === "completed"}
-                      onChange={() => toggleStatus(t)}
-                    />
-                    {t.title} - {t.description} ({t.status})
-                  </div>
-                  <div>
-                    <button onClick={() => startEdit(t)}>Edit</button>
+              <div>
+                {t.title} - {t.description} ({t.status})
+              </div>
+              <div>
+                <button onClick={() => toggleStatus(t)}>
+                  {t.status === "pending" ? "Mark Completed" : "Mark Pending"}
+                </button>
+                <button
+                  onClick={() =>
+                    updateTodo(t.id, {
+                      title: prompt("Edit Title", t.title),
+                      description: prompt("Edit Description", t.description),
+                    })
+                  }
+                >
+                  Edit
+                </button>
+                <button onClick={() => deleteTodo(t.id)}>Delete</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Assigned Tasks */}
+        <h2>Assigned Tasks</h2>
+        <ul>
+          {assignedTasks.map((t) => (
+            <li key={t.id}>
+              <div>
+                {t.title} - {t.description} ({t.status}) <br />
+                {t.creatorId == userId
+                  ? `To: ${t.Assignee?.username}`
+                  : `From: ${t.Creator?.username}`}
+              </div>
+              <div>
+                {/* If I gave the task */}
+                {t.creatorId == userId && (
+                  <>
+                    <button
+                      onClick={() =>
+                        updateTodo(t.id, {
+                          title: prompt("Edit Title", t.title),
+                          description: prompt("Edit Description", t.description),
+                        })
+                      }
+                    >
+                      Edit
+                    </button>
                     <button onClick={() => deleteTodo(t.id)}>Delete</button>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
+
+                {/* If task was given to me */}
+                {t.assignedTo == userId && (
+                  <button onClick={() => toggleStatus(t)}>
+                    {t.status === "pending" ? "Mark Completed" : "Mark Pending"}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>
@@ -192,6 +215,7 @@ function Todos({ token, logout }) {
   );
 }
 
+// App Wrapper
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
 
@@ -203,29 +227,16 @@ function App() {
     }
   }, [token]);
 
-  const logout = () => {
-    setToken(null);
-  };
-
   return (
     <BrowserRouter>
       {token ? (
         <>
           <nav>
-            <h3 style={{ color: "white" }}>Todos</h3>
-            <button
-              style={{
-                marginLeft: "auto",
-                background: "#f44336",
-                color: "white",
-              }}
-              onClick={logout}
-            >
-              Logout
-            </button>
+            <h3>Task Management</h3>
+            <button onClick={() => setToken(null)}>Logout</button>
           </nav>
           <Routes>
-            <Route path="/*" element={<Todos token={token} logout={logout} />} />
+            <Route path="/*" element={<Todos token={token} />} />
           </Routes>
         </>
       ) : (
