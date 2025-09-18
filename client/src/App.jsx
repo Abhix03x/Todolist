@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./App.css";
 
-// Auth Component
 function Auth({ setToken }) {
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
@@ -60,7 +59,6 @@ function Auth({ setToken }) {
   );
 }
 
-// Todos Component
 function Todos({ token }) {
   const [todos, setTodos] = useState([]);
   const [users, setUsers] = useState([]);
@@ -143,7 +141,7 @@ function Todos({ token }) {
         </select>
         <button onClick={addTodo}>Add</button>
 
-        {/* My Tasks */}
+       
         <h2>My Tasks</h2>
         <ul>
           {myTasks.map((t) => (
@@ -171,7 +169,6 @@ function Todos({ token }) {
           ))}
         </ul>
 
-        {/* Assigned Tasks */}
         <h2>Assigned Tasks</h2>
         <ul>
           {assignedTasks.map((t) => (
@@ -183,7 +180,6 @@ function Todos({ token }) {
                   : `From: ${t.Creator?.username}`}
               </div>
               <div>
-                {/* If I gave the task */}
                 {t.creatorId == userId && (
                   <>
                     <button
@@ -199,8 +195,7 @@ function Todos({ token }) {
                     <button onClick={() => deleteTodo(t.id)}>Delete</button>
                   </>
                 )}
-
-                {/* If task was given to me */}
+                
                 {t.assignedTo == userId && (
                   <button onClick={() => toggleStatus(t)}>
                     {t.status === "pending" ? "Mark Completed" : "Mark Pending"}
@@ -215,7 +210,6 @@ function Todos({ token }) {
   );
 }
 
-// App Wrapper
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
 
