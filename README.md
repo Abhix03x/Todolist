@@ -1,4 +1,4 @@
-A simple todo list app with authentication
+A simple task managment app with authentication
 Tech stack :-
 Frontend - React.js ,Axios
 Backend - Node.js ,Express.js
